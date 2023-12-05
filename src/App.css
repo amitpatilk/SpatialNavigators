@@ -1,0 +1,190 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  
+  height: 100vh; /* Optional: Adjust if you want to specify the height */
+
+}
+
+.reset-btn {
+  margin-right: 10px; /* Space between the reset and generate report buttons */
+  /* Add other styling similar to your generate-report-btn for consistency */
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1; /* Allows the container to fill the height */
+}
+
+.map {
+  flex-grow: 1; /* Map will take up remaining space */
+  height: 100vh; /* Adjust the 80px to the height of your header/footer if any */
+}
+
+.sidebar {
+  width: 400px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 42px); /* Adjust the 80px to the height of your header/footer if any */
+}
+
+.sidebar h2 {
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.three-way-toggle {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.three-way-toggle input[type='radio'] {
+  display: none; /* Hide the default radio button */
+}
+
+.three-way-toggle label {
+  background-color: #ddd;
+  color: #666;
+  padding: 5px 20px;
+  border: 1px solid #ccc;
+  margin: 0 2px;
+  cursor: pointer;
+}
+
+.three-way-toggle input[type='radio']:checked + label {
+  background-color: #0066cc;
+  color: white;
+}
+
+.filter-option,
+.date-picker {
+  margin-bottom: 15px;
+}
+
+.filter-option label,
+.date-picker label {
+  display: block;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.filter-option input[type="checkbox"],
+.date-picker input[type="date"] {
+  margin-right: 10px;
+}
+
+.generate-report-btn {
+  display: block;
+  background-color: #0066cc;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.react-select__control {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.generate-report-btn:hover {
+  background-color: #0055a3;
+}
+
+.analysis-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* other styles */
+}
+
+.image-row {
+  display: flex;
+  justify-content: space-between; /* Adjust as needed for your design */
+  width: 100%; /* Or the width of the container */
+  margin-bottom: 10px; /* Space between rows */
+}
+
+.image-row img {
+  width: calc(50% - 5px); /* Adjust the width as needed */
+  margin-right: 10px; /* Space between images in a row */
+  /* other styles */
+}
+
+/* If you have an odd number of images, the last image should not have a margin to the right */
+.image-row img:last-child {
+  margin-right: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+
+/* .analysis-images {
+  padding: 20px; 
+  max-width: 600px; 
+  display: flex; 
+  flex-wrap: wrap; 
+  justify-content: space-around; 
+}
+
+.analysis-images img {
+  padding: 10px; 
+  max-width: 100%; 
+  height: auto; 
+}
+
+.analysis-section {
+  width: 80%; 
+  margin: 0 auto; 
+  flex-direction: column;
+}
+.image-row{
+  flex-grow: 1; 
+  flex-direction: row;
+} */
+/* Combined media query */
+/* @media (max-width: 500px) { */
+  /* .content {
+    flex-direction: column;
+  }
+
+  .map, .sidebar {
+    width: 100%;
+    height: auto;
+  }
+
+  .map {
+    height: 50vh;
+  } */
+
+  /* .analysis-section {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .analysis-images img {
+    max-width: 50%;
+    height: auto;
+    padding: 20px;
+  } */
+/* } */
+
