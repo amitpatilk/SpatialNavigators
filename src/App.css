@@ -86,6 +86,7 @@
   border-radius: 5px;
   cursor: pointer;
   margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .react-select__control {
@@ -137,6 +138,79 @@
   animation: spin 2s linear infinite;
 }
 
+.new-data-point-fields {
+  margin-top: 15px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.new-data-point-fields .row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.non-input-field {
+  background-color: #e7e7e7;
+  padding: 10px 15px;
+  border-radius: 5px;
+  flex-basis: 48%; /* Adjusts for 2 items in a row */
+  text-align: center;
+}
+
+.new-data-point-fields input[type='text'],
+.new-data-point-fields input[type='time'],
+.new-data-point-fields input[type='date'],
+.new-data-point-fields select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.new-data-point-fields select {
+  background-color: white;
+}
+
+.field-heading {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.add-data-btn {
+  background-color: #0066cc; /* Blue shade to match the 'Generate Report' button */
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-size: 1rem;
+  margin-top: 20px;
+}
+
+.add-data-btn:hover {
+  background-color: #0055a3; /* A darker shade of blue for hover effect */
+}
+.space{
+  height: 5;
+}
+
+
+/* Responsive layout adjustments */
+@media (max-width: 768px) {
+  .new-data-point-fields .row {
+    flex-direction: column;
+  }
+
+  .non-input-field {
+    flex-basis: auto; /* Stretches to full width */
+    margin-bottom: 10px;
+  }
+}
 
 /* .analysis-images {
   padding: 20px; 

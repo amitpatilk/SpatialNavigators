@@ -1,11 +1,13 @@
-// import React, { useState, useRef } from 'react';
 import React, { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import Select from 'react-select';
 import Creatable from 'react-select/creatable';
 import './App.css';
 import 'leaflet/dist/leaflet.css';
+import icon from "./constants";
+
 
 
 const defaultCenter = [39.8283, -98.5795];
@@ -75,45 +77,6 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [clickedLat, setClickedLat] = useState(null);
   const [clickedLng, setClickedLng] = useState(null);
-
-  useEffect(() => {
-    console.log('Current latitude:', clickedLat);
-    console.log('Current longitude:', clickedLng);
-  }, [clickedLat, clickedLng]);
-
-  const handleMapClick = (e) => {
-    // const lat = e.latlng.lat;
-    // const lng = e.latlng.lng;
-    // console.log('Map click event:', e);
-
-    // // console.log('Clicked on the map');
-    // // console.log('Latitude:', e.latlng.lat);
-    // // console.log('Longitude:', e.latlng.lng);
-    // setClickedLat(e.latlng.lat);
-    // setClickedLng(e.latlng.lng);
-    
-
-    // setMarkerPosition([e.latlng.lat, e.latlng.lng]);
-
-
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-    console.log('Latitude:', lat); // Should log the latitude
-    console.log('Longitude:', lng); // Should log the longitude
-
-    setClickedLat(lat);
-    setClickedLng(lng);
-    setMarkerPosition([lat, lng]);
-    
- 
-    // setMarkerPosition([e.latlng.lat, e.latlng.lng]);
-    // You might also want to automatically open the modal on map click
-    // setShowModal(true);
-  };
-
-  // const [selectedState, setSelectedState] = useState(null);
-  // const [dateRange] = useState({ startDate: '', endDate: '' });
-
   const [showTraffic] = useState(true);
   const [showConstruction] = useState(true);
   const [realTimeData] = useState(false);
@@ -163,9 +126,66 @@ function App() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
 
+  const handleMapClick = (e) => {
+    console.log("Clicked");
+    const newMarker = {
+      position: e.latlng,
+      key: new Date().getTime(),
+    };
 
+    setMarker(newMarker);
+  };
 
+  function LocationMarker() {
+    const [position, setPosition] = useState(null)
+    const map = useMapEvents({
+      click(e) {
+        handleMapClick(e); // Call your custom click handler
+        map.locate()
+        setClickedLat(e.latlng.lat);
+        setClickedLng(e.latlng.lng);
+      }
+      /*,
+      locationfound(e) {
+        setPosition(e.latlng)
+        map.flyTo(e.latlng, map.getZoom())
+      },*/
+    })
+  
+    /*return position === null ? null : (
+      <Marker position={position} icon={icon}>
+        <Popup>
+                Lat, Lon: {marker.position.lat.toFixed(6)},{" "}
+                {marker.position.lng.toFixed(6)}
+        </Popup>
+      </Marker>
+    
+    )
+    */
+  }
+
+  useEffect(() => {
+    // You can add code here to fetch or set initial coordinates if needed
+    // For example, using navigator.geolocation.getCurrentPosition to get user's location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const initialMarker = {
+          position: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          },
+          key: new Date().getTime(),
+        };
+        setMarker(initialMarker);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+      },
+    );
+  }, []);
 
   // Event handlers for date changes
   const handleStartDateChange = (event) => {
@@ -191,7 +211,6 @@ function App() {
       onClose();
     };
 
-    
 
     return (
       
@@ -259,57 +278,90 @@ function App() {
     // return response.json();
   };
 
+  const handleReportIncident = async () => {
+    const incidentData = {
+      description: description,
+      address: address,
+      time: time,
+      date: date,
+      visibility: visibility,
+      latitude: clickedLat,
+      longitude: clickedLng
+    };
+  
+    console.log('Reporting Incident:', incidentData);
+  
+    // Replace 'YOUR_BACKEND_ENDPOINT' with your actual backend endpoint
+    // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json'
+    //   },
+    //   body: JSON.stringify(incidentData)
+    // });
+  
+    // if (!response.ok) {
+    //   throw new Error(`HTTP error! status: ${response.status}`);
+    // }
+  
+    // // Handle the response as needed
+    // const responseData = await response.json();
+    // console.log('Response:', responseData);
+  };
+  
+  // Add this function to the "Report Incident" button's onClick event
+  
+
+  const [showDataPointFields, setShowDataPointFields] = useState(false);
+  const toggleDataPointFields = () => {
+    setShowDataPointFields(!showDataPointFields);
+  };
+
   console.log('Current latitude:', clickedLat);
   console.log('Current longitude:', clickedLng);
 
 
+  const [description, setDescription] = useState('');
+  const [address, setAddress] = useState('');
+  const [time, setTime] = useState('');
+  const [date, setDate] = useState('');
+  const [visibility, setVisibility] = useState('');
+
   return (
-
     
+
     <div className="App">
-
-    {clickedLat !== null && clickedLng !== null && (
-      <div>
-        <p>Latitude: {clickedLat}</p>
-        <p>Longitude: {clickedLng}</p>
-      </div>
-    )}
-      {/* <Map ref={mapRef} center={defaultCenter} zoom={defaultZoom} className="map">
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap contributors"
-        />
-      </Map> */}
-      {/* <div className="App"> */}
-
       
-      {/* {clickedLat && clickedLng && (
-        <div>
-          <p>Latitude: {clickedLat}</p>
-          <p>Longitude: {clickedLng}</p>
-        </div>
-      )} */}
-      {/* </div> */}
-
+      
       <div className="content">
-
-        
         {/* Map Section - Leaflet Map or Folium Map */}
         {!displayFoliumMap ? (
+          
           <MapContainer center={defaultCenter} 
           zoom={defaultZoom} 
           className="map"
-          whenCreated={(mapInstance) => {
-            if(mapInstance){
-              mapInstance.on('click', handleMapClick);
-            }  
-          }}>
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="&copy; OpenStreetMap contributors"
-            />
-            {markerPosition && <Marker position={markerPosition} />}
-          </MapContainer>
+          scrollWheelZoom={true}
+          whenCreated={(map) => {
+            setMap(map);
+            map.on("click", handleMapClick);
+            console.log("Map Created");
+          }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <LocationMarker />
+          {marker && (
+            <Marker key={marker.key} position={marker.position} icon={icon}>
+              <Popup>
+                Lat, Lon: {marker.position.lat.toFixed(6)},{" "}
+                {marker.position.lng.toFixed(6)}
+              </Popup>
+            </Marker>
+          )}
+        </MapContainer>
+          
         ) : (
           <iframe
             src={`${process.env.PUBLIC_URL}/map.html`}
@@ -355,7 +407,7 @@ function App() {
                 checked={toggleState === 'option3'}
                 onChange={handleToggleChange}
               />
-              <label htmlFor="toggleOption3">Co-relation</label>
+              <label htmlFor="toggleOption3">Both</label>
             </div>
           </div>
 
@@ -460,8 +512,64 @@ function App() {
           <button className="generate-report-btn" onClick={handleGenerateReport}>
             {loading ? "Loading..." : "Generate Report"} {/* Loading indicator */}
           </button>
+          <div className = 'space'></div>
+          <button className = ".add-data-btn" onClick={toggleDataPointFields}>Add New Data Point</button>
 
-          <button onClick={() => setShowModal(true)}>Add New Data Point</button>
+          {showDataPointFields && (
+        <div className="new-data-point-fields">
+          <div className="row">
+          <div className="data-point-field">
+            <p className="field-heading">Latitude:</p>
+            <div className="non-input-field"> {clickedLat ? clickedLat.toFixed(6) : ""}</div>
+          </div>
+          <div className="data-point-field">
+            <p className="field-heading">Longitude:</p>
+            <div className="non-input-field">{clickedLng ? clickedLng.toFixed(6) : ""}</div>
+          </div>
+
+            
+            
+          </div>
+          <input
+            type="text"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <div className="row">
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+          />
+
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+          </div>
+          <select 
+          value={visibility}
+          onChange={(e) => setVisibility(e.target.value)}>
+            <option value="">Visibility</option>
+            {/* Generate options 1-10 */}
+            {Array.from({ length: 10 }, (_, i) => (
+              <option key={i} value={i + 1}>{i + 1}</option>
+            ))}
+          </select>
+
+          <button className="generate-report-btn" onClick = {handleReportIncident}>
+            {"Report Incident"} {/* Loading indicator */}
+          </button>
+        </div>
+      )}
+
 
         </div>
       </div>
