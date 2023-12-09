@@ -1,6 +1,7 @@
 .App {
   display: flex;
   flex-direction: column;
+  /* flex-direction: row; */
   
   height: 100vh; /* Optional: Adjust if you want to specify the height */
 
@@ -53,6 +54,16 @@
   border: 1px solid #ccc;
   margin: 0 2px;
   cursor: pointer;
+}
+.folium-map{
+  flex-grow: 1; /* Map will take up remaining space */
+  height: 100vh;
+}
+
+.folium-map iframe {
+  width: 100%; /* This will make the iframe fill its container's width */
+  height: 100%; /* Adjust height as needed */
+  /* Additional styles if needed */
 }
 
 .three-way-toggle input[type='radio']:checked + label {

@@ -74,7 +74,7 @@ function App() {
   const [selectedCities, setSelectedCities] = useState([]);
   const [selectedCounties, setSelectedCounties] = useState([]);
   const [displayFoliumMap, setDisplayFoliumMap] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
   const [clickedLat, setClickedLat] = useState(null);
   const [clickedLng, setClickedLng] = useState(null);
   const [showTraffic] = useState(true);
@@ -85,10 +85,11 @@ function App() {
   const [geographicArea, setGeographicArea] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const imageUrls = [
-    'Images/download.jpeg',
+    'Images/WhatsApp Image 2023-12-08 at 9.27.40 PM.jpeg',
     'Images/641968.jpg',
     'Images/641968.jpg',
-    'Images/641968.jpg'
+    'Images/641968.jpg',
+    
 
   ];
   const [toggleState, setToggleState] = useState('option1');
@@ -196,71 +197,89 @@ function App() {
     setEndDate(event.target.value);
   };
 
-  const handleModalSubmit = (data) => {
-    console.log('Data from modal:', data);
-    // Here you can process the data and associate it with the marker
-  };
-
-
-  const Modal = ({ isOpen, onClose, onSubmit }) => {
-    const [location, setLocation] = useState('');
-    const [description, setDescription] = useState('');
-
-    const handleSubmit = () => {
-      onSubmit({ location, description });
-      onClose();
-    };
-
-
-    return (
-      
-      <div style={{ display: isOpen ? 'block' : 'none' }}>
-        {/* Modal content */}
-        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" />
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description"></textarea>
-        <button onClick={handleSubmit}>Submit</button>
-        <button onClick={onClose}>Close</button>
-      </div>
-    );
-  };
-
+  // const handleModalSubmit = (data) => {
+  //   console.log('Data from modal:', data);
+  //   // Here you can process the data and associate it with the marker
+  // };
 
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const handleGenerateReport = () => {
     setLoading(true); // Start loading
-
-    // Simulate a delay for fetching data from the backend
-    setTimeout(async () => {
-      try {
-
-        await handleSubmit();
-
+  
+    // Construct the query parameters
+    const queryParams = new URLSearchParams();
+    selectedStates.forEach(state => queryParams.append('state', state.value));
+    selectedCounties.forEach(county => queryParams.append('county', county.value));
+    selectedCities.forEach(city => queryParams.append('city', city.value));
+    queryParams.append("start_date", startDate);
+    queryParams.append("end_date", endDate);
+    queryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
+  
+    // Construct the URL
+    const url = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+  
+    // Use a GET request to send data and handle the response
+    fetch(url)
+      .then(response => response.text()) // Expecting text/html response
+      .then(html => {
+        // Injecting the HTML into the DOM
+        // const mapContainer = document.getElementById('mapContainer');
+        // mapContainer.innerHTML = html;
+        setFoliumMap(html);
+  
+        // Set states based on successful data retrieval
         setDisplayFoliumMap(true);
-
         setShowAnalysis(true);
-      } catch (error) {
+      })
+      .catch(error => {
         console.error('Error during data submission:', error);
         // Optionally set an error state here to notify the user
-      } finally {
+      })
+      .finally(() => {
         setLoading(false); // End loading, regardless of success or failure
-      }
-    }, 2000); // This timeout represents the time taken to get the data from the backend
+      });
   };
+  
 
 
-  const handleSubmit = async () => {
-    const payload = {
-      selectedStates: selectedStates.map(state => state.value),
-      selectedCities: selectedCities.map(city => city.value),
-      selectedCounties: selectedCounties.map(county => county.value),
-      startDate: startDate,
-      endDate: endDate,
-      toggleState: toggleState
-    };
 
-    console.log('Payload:', payload);
-    return payload;
+
+  // const handleGenerateReport = () => {
+  //   setLoading(true); // Start loading
+
+  //   // Simulate a delay for fetching data from the backend
+  //   setTimeout(async () => {
+  //     try {
+
+  //       await handleSubmit();
+
+  //       setDisplayFoliumMap(true);
+
+  //       setShowAnalysis(true);
+  //     } catch (error) {
+  //       console.error('Error during data submission:', error);
+  //       // Optionally set an error state here to notify the user
+  //     } finally {
+  //       setLoading(false); // End loading, regardless of success or failure
+  //     }
+  //   }, 2000); // This timeout represents the time taken to get the data from the backend
+  // };
+
+
+  // const handleSubmit = async () => {
+  //   const payload = {
+  //     selectedStates: selectedStates.map(state => state.value),
+  //     selectedCities: selectedCities.map(city => city.value),
+  //     selectedCounties: selectedCounties.map(county => county.value),
+  //     startDate: startDate,
+  //     endDate: endDate,
+  //     toggleState: toggleState
+  //   };
+
+  //   console.log('Payload:', payload);
+  //   return payload;
 
     // Send payload to the backend
     // const response = await fetch('YOUR_BACKEND_ENDPOINT', {
@@ -276,8 +295,52 @@ function App() {
     // }
 
     // return response.json();
-  };
+  // };
 
+  const handleSubmit = async () => {
+    const queryParams = new URLSearchParams();
+    selectedStates.forEach(state => queryParams.append('states', state.value));
+    selectedCities.forEach(city => queryParams.append('cities', city.value));
+    selectedCounties.forEach(county => queryParams.append('counties', county.value));
+  
+    // Assuming 'startDate' and 'endDate' are in the correct format
+    queryParams.append("start_date", startDate instanceof Date ? startDate.toISOString() : startDate);
+    queryParams.append("end_date", endDate instanceof Date ? endDate.toISOString() : endDate);
+    queryParams.append("toggle_state", toggleState);
+  
+  
+    // Construct the URL
+    const url = `http://192.168.0.249:5000/accident?${queryParams.toString()}`;
+  
+    // Start loading
+    // setLoading(true);
+  
+    // Use a GET request to send data and handle the response
+    fetch(url)
+      .then(response => response.text()) // Expecting text/html response
+      .then(html => {
+        // Injecting the HTML into the DOM
+        const mapContainer = document.getElementById('mapContainer');
+        mapContainer.innerHTML = html;
+  
+        // Set states based on successful data retrieval
+        setDisplayFoliumMap(true);
+        setShowAnalysis(true);
+      })
+      .catch(error => {
+        console.error('Error during data submission:', error);
+        // Optionally set an error state here to notify the user
+      })
+      .finally(() => {
+        setLoading(false); // End loading, regardless of success or failure
+      });
+  };
+  
+  // In your existing function where you call handleSubmit
+  setTimeout(() => {
+    handleSubmit(); // Call handleSubmit directly without try-catch
+  }, 2000); // Simulated delay
+  
   const handleReportIncident = async () => {
     const incidentData = {
       description: description,
@@ -326,6 +389,7 @@ function App() {
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
   const [visibility, setVisibility] = useState('');
+  const [foliumMap, setFoliumMap] = useState(null);
 
   return (
     
@@ -336,6 +400,46 @@ function App() {
       <div className="content">
         {/* Map Section - Leaflet Map or Folium Map */}
         {!displayFoliumMap ? (
+          <MapContainer
+            center={defaultCenter}
+            zoom={defaultZoom}
+            className="map"
+            scrollWheelZoom={true}
+            whenCreated={(map) => {
+              setMap(map);
+              map.on("click", handleMapClick);
+              console.log("Map Created");
+            }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <LocationMarker />
+            {marker && (
+              <Marker key={marker.key} position={marker.position} icon={icon}>
+                <Popup>
+                  Lat, Lon: {marker.position.lat.toFixed(6)},{" "}
+                  {marker.position.lng.toFixed(6)}
+                </Popup>
+              </Marker>
+            )}
+          </MapContainer>
+        ) : null}
+
+        {displayFoliumMap && (
+          <div className="folium-map">
+            <iframe
+              srcDoc={foliumMap} // Use srcDoc to display HTML content
+              title="Folium Map"
+              className="map"
+              frameBorder="0"
+              
+            ></iframe>
+          </div>
+        )}
+
+        {/* {!displayFoliumMap ? (
           
           <MapContainer center={defaultCenter} 
           zoom={defaultZoom} 
@@ -365,12 +469,13 @@ function App() {
         ) : (
           <iframe
             src={`${process.env.PUBLIC_URL}/map.html`}
+            // src={`http://localhost:5005/generate_map`}
             title="Folium Map"
             className="map"
             //style={{ width: '100%', height: '500px' }}
             frameBorder="0"
           ></iframe>
-        )}
+        )} */}
 
         <div className="sidebar">
           <h2>Filter Panel</h2>
@@ -574,7 +679,7 @@ function App() {
         </div>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleModalSubmit} />
+      {/* <Modal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleModalSubmit} /> */}
 
       <div style={{ borderTop: '2px solid #0e0f0e', margin: '20px 0' }}></div>
 
