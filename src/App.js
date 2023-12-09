@@ -85,10 +85,10 @@ function App() {
   const [geographicArea, setGeographicArea] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const imageUrls = [
-    'Images/WhatsApp Image 2023-12-08 at 9.27.40 PM.jpeg',
-    'Images/641968.jpg',
-    'Images/641968.jpg',
-    'Images/641968.jpg',
+    'Images/image1.jpeg',
+    'Images/image2.jpeg',
+    'Images/image3.jpeg',
+    'Images/image4.jpeg',
     
 
   ];
@@ -218,7 +218,11 @@ function App() {
     queryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
   
     // Construct the URL
-    const url = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+    // const url = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+    const url = `http://192.168.1.15:5000/generate_map?${queryParams.toString()}`;
+
+    const controller = new AbortController(); //changed
+    const timeoutId = setTimeout(() => controller.abort(), 300000); //change
   
     // Use a GET request to send data and handle the response
     fetch(url)
@@ -238,6 +242,7 @@ function App() {
         // Optionally set an error state here to notify the user
       })
       .finally(() => {
+        clearTimeout(timeoutId); //changes
         setLoading(false); // End loading, regardless of success or failure
       });
   };
