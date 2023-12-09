@@ -68,6 +68,7 @@ const usStates = [
 
 
 function App() {
+  const [fetchedImageUrls, setFetchedImageUrls] = useState([]);
   const [markerPosition, setMarkerPosition] = useState(null);
   const mapRef = useRef();
   const [selectedStates, setSelectedStates] = useState([]);
@@ -85,12 +86,10 @@ function App() {
   const [geographicArea, setGeographicArea] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const imageUrls = [
-    'Images/image1.jpeg',
-    'Images/image2.jpeg',
+    'Images/real-flareon-pokemon-viijoqkan5uznbvc.webp',
+    'Images/real-flareon-pokemon-viijoqkan5uznbvc.webp',
     'Images/image3.jpeg',
     'Images/image4.jpeg',
-    
-
   ];
   const [toggleState, setToggleState] = useState('option1');
   const handleToggleChange = (event) => {
@@ -204,74 +203,234 @@ function App() {
 
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  
+  //Second Final
   const handleGenerateReport = () => {
     setLoading(true); // Start loading
   
-    // Construct the query parameters
+    // Construct the query parameters for the map URL
     const queryParams = new URLSearchParams();
-    selectedStates.forEach(state => queryParams.append('state', state.value));
-    selectedCounties.forEach(county => queryParams.append('county', county.value));
-    selectedCities.forEach(city => queryParams.append('city', city.value));
-    queryParams.append("start_date", startDate);
-    queryParams.append("end_date", endDate);
-    queryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
+    const mapQueryParams = new URLSearchParams();
+    selectedStates.forEach(state => mapQueryParams.append('state', state.value));
+    selectedCounties.forEach(county => mapQueryParams.append('county', county.value));
+    selectedCities.forEach(city => mapQueryParams.append('city', city.value));
+    mapQueryParams.append("start_date", startDate);
+    mapQueryParams.append("end_date", endDate);
+    mapQueryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
+    
+    // Construct the URL for the map
+    // const mapUrl = `http://192.168.1.15:5000/generate_map?${mapQueryParams.toString()}`;
+    // const mapUrl = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+    const mapUrl = `http://localhost:5005/generate_map?${queryParams.toString()}`;
   
-    // Construct the URL
-    // const url = `http://localhost:5005/generate_map?${queryParams.toString()}`;
-    const url = `http://192.168.1.15:5000/generate_map?${queryParams.toString()}`;
-
-    const controller = new AbortController(); //changed
-    const timeoutId = setTimeout(() => controller.abort(), 300000); //change
+    const mapTimeoutController = new AbortController();
+    const mapTimeoutId = setTimeout(() => mapTimeoutController.abort(), 300000);
   
-    // Use a GET request to send data and handle the response
-    fetch(url)
-      .then(response => response.text()) // Expecting text/html response
+    // Use a GET request to retrieve the Folium HTML map
+    const mapPromise = Promise.race([
+      fetch(mapUrl),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Map request timeout')), 300000))
+    ])
+      .then(response => response.text()) // Expecting text/html response for the map
       .then(html => {
-        // Injecting the HTML into the DOM
-        // const mapContainer = document.getElementById('mapContainer');
-        // mapContainer.innerHTML = html;
+        // Inject the HTML into the DOM for the Folium map
         setFoliumMap(html);
-  
-        // Set states based on successful data retrieval
+        // Set states based on successful map data retrieval
         setDisplayFoliumMap(true);
         setShowAnalysis(true);
       })
       .catch(error => {
-        console.error('Error during data submission:', error);
+        console.error('Error during map data submission:', error);
         // Optionally set an error state here to notify the user
       })
       .finally(() => {
-        clearTimeout(timeoutId); //changes
+        clearTimeout(mapTimeoutId); // Clear the map timeout
+      });
+  
+    // Construct separate URLs for the images
+    const imageEndpoints = ['get_image1', 'get_image2', 'get_image3'];
+    const imagePromises = [];
+  
+    for (const endpoint of imageEndpoints) {
+      // Construct the image URL based on your backend's endpoint and query parameters
+      const imageQueryParams = new URLSearchParams();
+      // Add query parameters for states, counties, startDate, endDate, etc. as needed
+      imageQueryParams.append('start_date', startDate);
+      imageQueryParams.append('end_date', endDate);
+  
+      const imageUrl = `http://192.168.1.15:5001/${endpoint}/${startDate}/${endDate}`;
+  
+      const imagePromise = fetch(imageUrl)
+        .then(response => {
+          if (response.ok) {
+            return response.blob(); // Expecting image data
+          } else {
+            throw new Error('Network response was not ok');
+          }
+        })
+        .then(blob => {
+          // Create a URL for the image blob
+          const imageSrc = URL.createObjectURL(blob);
+  
+          // Add the image URL to the fetchedImageUrls state variable
+          setFetchedImageUrls(prevImageUrls => [...prevImageUrls, imageSrc]);
+        })
+        .catch(error => {
+          console.error(`Error during ${endpoint} image data submission:`, error);
+          // Optionally set an error state here to notify the user
+        });
+  
+      imagePromises.push(imagePromise);
+    }
+  
+    // Wait for all image requests to complete
+    Promise.all(imagePromises)
+      .finally(() => {
+        clearTimeout(mapTimeoutId); // Clear the map timeout (in case it didn't complete before)
         setLoading(false); // End loading, regardless of success or failure
       });
   };
+  // const [loadedImages, setLoadedImages] = useState([]); 
+  // const handleGenerateReport = () => {
+  //   setLoading(true); // Start loading
+  
+  //   // Construct the query parameters for the map URL
+  //   const queryParams = new URLSearchParams();
+  //   const mapQueryParams = new URLSearchParams();
+  //   selectedStates.forEach(state => mapQueryParams.append('state', state.value));
+  //   selectedCounties.forEach(county => mapQueryParams.append('county', county.value));
+  //   selectedCities.forEach(city => mapQueryParams.append('city', city.value));
+  //   mapQueryParams.append("start_date", startDate);
+  //   mapQueryParams.append("end_date", endDate);
+  //   mapQueryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
+    
+  //   // Construct the URL for the map
+  //   // const mapUrl = `http://192.168.1.15:5000/generate_map?${mapQueryParams.toString()}`;
+  //   // const mapUrl = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+  //   const mapUrl = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+  
+  //   const mapTimeoutController = new AbortController();
+  //   const mapTimeoutId = setTimeout(() => mapTimeoutController.abort(), 300000);
+  
+  //   // Use a GET request to retrieve the Folium HTML map
+  //   const mapPromise = Promise.race([
+  //     fetch(mapUrl),
+  //     new Promise((_, reject) => setTimeout(() => reject(new Error('Map request timeout')), 300000))
+  //   ])
+  //     .then(response => response.text()) // Expecting text/html response for the map
+  //     .then(html => {
+  //       // Inject the HTML into the DOM for the Folium map
+  //       setFoliumMap(html);
+  //       // Set states based on successful map data retrieval
+  //       setDisplayFoliumMap(true);
+  //       setShowAnalysis(true);
+  //     })
+  //     .catch(error => {
+  //       console.error('Error during map data submission:', error);
+  //       // Optionally set an error state here to notify the user
+  //     })
+  //     .finally(() => {
+  //       clearTimeout(mapTimeoutId); // Clear the map timeout
+  //     });
+  
+  //   // Construct separate URLs for the images
+    
+  //   const imageEndpoints = ['get_image1', 'get_image2', 'get_image3', 'get_image1'];
+  //   const imagePromises = [];
+  
+  //   for (const endpoint of imageEndpoints) {
+  //     // Construct the image URL based on your backend's endpoint and query parameters
+  //     const imageQueryParams = new URLSearchParams();
+  //     // Add query parameters for states, counties, startDate, endDate, etc. as needed
+  //     imageQueryParams.append('start_date', startDate);
+  //     imageQueryParams.append('end_date', endDate);
+  
+  //     const imageUrl = `http://192.168.1.15:5001/${endpoint}/${startDate}/${endDate}`;
+  
+  //     const imagePromise = fetch(imageUrl)
+  //       .then(response => {
+  //         if (response.ok) {
+  //           return response.blob(); // Expecting image data
+  //         } else {
+  //           throw new Error('Network response was not ok');
+  //         }
+  //       })
+  //       .then(blob => {
+  //         // Create a URL for the image blob
+  //         const imageSrc = URL.createObjectURL(blob);
+  //         setLoadedImages(prevLoadedImages => [...prevLoadedImages, imageSrc]);
+  //         // Add the image URL to the fetchedImageUrls state variable
+  //         setFetchedImageUrls(prevImageUrls => [...prevImageUrls, imageSrc]);
+  //       })
+  //       .catch(error => {
+  //         console.error(`Error during ${endpoint} image data submission:`, error);
+  //         // Optionally set an error state here to notify the user
+  //       });
+  
+  //     imagePromises.push(imagePromise);
+  //   }
+  
+  //   // Wait for all image requests to complete
+  //   Promise.all(imagePromises)
+  //     .finally(() => {
+  //       clearTimeout(mapTimeoutId); // Clear the map timeout (in case it didn't complete before)
+  //       setLoading(false); // End loading, regardless of success or failure
+  //     });
+  // };
+  
+  
+  
+  
+  
+  
+  //final
+  // const handleGenerateReport = () => {
+  //   setLoading(true); // Start loading
+  
+  //   // Construct the query parameters
+  //   const queryParams = new URLSearchParams();
+  //   selectedStates.forEach(state => queryParams.append('state', state.value));
+  //   selectedCounties.forEach(county => queryParams.append('county', county.value));
+  //   selectedCities.forEach(city => queryParams.append('city', city.value));
+  //   queryParams.append("start_date", startDate);
+  //   queryParams.append("end_date", endDate);
+  //   queryParams.append("dataset_name", toggleState); // Assuming dataset_name is the same as toggleState
+  
+  //   // Construct the URL
+  //   // const url = `http://localhost:5005/generate_map?${queryParams.toString()}`;
+  //   const url = `http://192.168.1.15:5000/generate_map?${queryParams.toString()}`;
+
+  //   const controller = new AbortController(); //changed
+  //   const timeoutId = setTimeout(() => controller.abort(), 300000); //change
+  
+  //   // Use a GET request to send data and handle the response
+  //   fetch(url)
+  //     .then(response => response.text()) // Expecting text/html response
+  //     .then(html => {
+  //       // Injecting the HTML into the DOM
+  //       // const mapContainer = document.getElementById('mapContainer');
+  //       // mapContainer.innerHTML = html;
+  //       setFoliumMap(html);
+  
+  //       // Set states based on successful data retrieval
+  //       setDisplayFoliumMap(true);
+  //       setShowAnalysis(true);
+  //     })
+  //     .catch(error => {
+  //       console.error('Error during data submission:', error);
+  //       // Optionally set an error state here to notify the user
+  //     })
+  //     .finally(() => {
+  //       clearTimeout(timeoutId); //changes
+  //       setLoading(false); // End loading, regardless of success or failure
+  //     });
+  // };
   
 
 
 
 
-  // const handleGenerateReport = () => {
-  //   setLoading(true); // Start loading
-
-  //   // Simulate a delay for fetching data from the backend
-  //   setTimeout(async () => {
-  //     try {
-
-  //       await handleSubmit();
-
-  //       setDisplayFoliumMap(true);
-
-  //       setShowAnalysis(true);
-  //     } catch (error) {
-  //       console.error('Error during data submission:', error);
-  //       // Optionally set an error state here to notify the user
-  //     } finally {
-  //       setLoading(false); // End loading, regardless of success or failure
-  //     }
-  //   }, 2000); // This timeout represents the time taken to get the data from the backend
-  // };
-
+  
 
   // const handleSubmit = async () => {
   //   const payload = {
@@ -342,9 +501,9 @@ function App() {
   };
   
   // In your existing function where you call handleSubmit
-  setTimeout(() => {
-    handleSubmit(); // Call handleSubmit directly without try-catch
-  }, 2000); // Simulated delay
+  // setTimeout(() => {
+  //   handleSubmit(); // Call handleSubmit directly without try-catch
+  // }, 2000); // Simulated delay
   
   const handleReportIncident = async () => {
     const incidentData = {
@@ -688,28 +847,75 @@ function App() {
 
       <div style={{ borderTop: '2px solid #0e0f0e', margin: '20px 0' }}></div>
 
-
+      
       {
         showAnalysis && (
           <div className="analysis-section">
+   
+  
             <h1>Analysis</h1>
-            {/* Wrapping each pair of images in a .image-row div */}
-            {imageUrls.map((url, index) => (
-              // Only create a new row for even indices
+            {fetchedImageUrls.length > 0 && (
+              <div className="image-row">
+                {fetchedImageUrls.map((imageUrl, index) => (
+                  <img key={index} src={imageUrl} alt={`Image ${index}`} />
+                ))}
+              </div>
+            )}
+            
+            {/* {imageUrls.map((url, index) => (
+              
               index % 2 === 0 ? (
                 <div className="image-row" key={index}>
-                  {/* First image of the pair */}
+                  
                   <img src={process.env.PUBLIC_URL + '/' + imageUrls[index]} alt={`Analysis ${index + 1}`} />
-                  {/* Second image of the pair, if it exists */}
+                  
                   {imageUrls[index + 1] ? (
                     <img src={process.env.PUBLIC_URL + '/' + imageUrls[index + 1]} alt={`Analysis ${index + 2}`} />
                   ) : null}
                 </div>
               ) : null
-            ))}
+            ))} */}
           </div>
         )
       }
+
+{/* {
+        showAnalysis && (
+          <div className="analysis-section">
+      {fetchedImageUrls.length > 0 && (
+        <div className="image-row">
+          {fetchedImageUrls.map((imageUrl, index) => (
+            <img key={index} src={imageUrl} alt={`Image ${index}`} />
+          ))}
+        </div>
+      )}
+      <h1>Analysis</h1>
+      {imageUrls.map((url, index) => (
+        
+        index % 2 === 0 ? (
+          <div className="image-row" key={index}>
+            
+            {loadedImages[index] ? (
+              <img src={loadedImages[index]} alt={`Analysis ${index + 1}`} />
+            ) : (
+              <img src={process.env.PUBLIC_URL + '/' + imageUrls[index]} alt={`Analysis ${index + 1}`} />
+            )}
+            
+            {imageUrls[index + 1] ? (
+              loadedImages[index + 1] ? (
+                <img src={loadedImages[index + 1]} alt={`Analysis ${index + 2}`} />
+              ) : (
+                <img src={process.env.PUBLIC_URL + '/' + imageUrls[index + 1]} alt={`Analysis ${index + 2}`} />
+              )
+            ) : null}
+          </div>
+        ) : null
+      ))}
+    </div>
+        )
+      } */}
+
+
 
 
 
